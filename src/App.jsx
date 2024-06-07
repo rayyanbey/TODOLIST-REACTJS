@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import "./index.css";
 import { v4 as uuidv4 } from "uuid";
@@ -6,9 +6,30 @@ function App() {
   const [todo, setTodo] = useState("");
   const [todos, setTodos] = useState([]);
   const [completed, setCompleted] = useState([]);
+  const saveToLs =  (params)=>
+    {
+      localStorage.setItem("todos",JSON.stringify(todos))
+    }
 
+   useEffect(()=>
+  {
+    let todoString = localStorage.getItem("todos")
 
-  const handleEdit = () => {};
+    if(todoString)
+      {
+        JSON.parse(localStorage.getItem("todos"))
+        setTodos(todos)
+      }
+  },[]) 
+  const handleEdit = (e, id)=>{ 
+    let t = todos.filter(i=>i.id === id) 
+    setTodo(t[0].todo)
+    let newTodos = todos.filter(item=>{
+      return item.id!==id
+    }); 
+    setTodos(newTodos) 
+    saveToLs()
+  }
   const handleDel = (e) => {
     let id = e.target.name;
     //console.log(id)
@@ -18,15 +39,18 @@ function App() {
       updatedTodos.pop(id);
       setTodos(updatedTodos);
     }
+    saveToLs()
   };
   const handleAdd = () => {
     if (todo.trim() !== "") {
       setTodos([...todos, { id: uuidv4(), todo, isCompleted: false }]);
       setTodo("");
     }
+    saveToLs()
   };
   const handleChange = (e) => {
     setTodo(e.target.value);
+    saveToLs()
   };
   const handleCheck = (e) => {
     let id = e.target.name;
@@ -39,13 +63,14 @@ function App() {
 
     let completedTodos = newTodos.filter((todo) => todo.isCompleted);
     setCompleted(completedTodos, { id: uuidv4() });
-    console.log(completedTodos);
+
+    saveToLs()
   };
   return (
     <>
       <Navbar />
-      <div className="container mx-auto my-5 p-5 rounded-xl min-h-[70vh]  bg-gradient-to-r from-cyan-400 to-blue-400 w-1/2 flex-row">
-        <div className="addTodo my-5">
+      <div className="container mx-auto my-5 p-5 rounded-xl min-h-[70vh]  bg-gradient-to-r from-cyan-400 to-blue-400  transition-all duration-75  flex-col flex">
+        <div className="addTodo my-5 ">
           <h2 className="text-xl font-semibold text-pretty ">Add a Todo</h2>
           <input
             onChange={handleChange}
@@ -57,10 +82,9 @@ function App() {
             onClick={handleAdd}
             className="bg-cyan-600 hover:bg-cyan-300  p-3 py-1 rounded-xl mx-5 text-white"
           >
-            Add
+            Save
           </button>
         </div>
-
 
         <h2 className="text-xl font-semibold text-pretty">Your Todos</h2>
         {todos.length === 0 && (
@@ -82,7 +106,8 @@ function App() {
                 </div>
                 <div className="buttons">
                   <button
-                    onClick={handleEdit}
+                    onClick={(e)=>handleEdit(e,item.id)}
+                    
                     className="bg-cyan-600 hover:bg-cyan-300 p-3 py-1 rounded-xl mx-1  text-white"
                   >
                     edit
